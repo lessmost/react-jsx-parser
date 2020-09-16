@@ -102,7 +102,7 @@ describe('JsxParser Component', () => {
   describe('conditional || rendering', () => {
     test('should handle boolean test value ', () => {
       const { component, rendered } = render(<JsxParser jsx={
-      '<p falsyProp={false || "fallback"} truthyProp={true || "fallback"}>'
+        '<p falsyProp={false || "fallback"} truthyProp={true || "fallback"}>'
         + '(display "good": {"good" || "fallback"}); (display "fallback": {"" || "fallback"})'
         + '</p>'
       }
@@ -1110,6 +1110,68 @@ describe('JsxParser Component', () => {
         />,
       )
       expect(rendered.textContent).toEqual('QUUX')
+    })
+  })
+
+  describe('using functions', () => {
+    test('should handle arrow function', () => {
+      const { component, rendered } = render(<JsxParser
+        bindings={{ G: 'Global' }}
+        jsx={'<div>{[1,2,3].map(i => (<span>{G}: {i}</span>))}</div>'}
+      />)
+      expect(component.ParsedChildren[0].props.children).toHaveLength(3)
+      expect(rendered.childNodes[0].childNodes).toHaveLength(3)
+      expect(rendered.childNodes[0].childNodes[0].textContent.trim())
+        .toEqual('Global: 1')
+      expect(rendered.childNodes[0].childNodes[1].textContent.trim())
+        .toEqual('Global: 2')
+      expect(rendered.childNodes[0].childNodes[2].textContent.trim())
+        .toEqual('Global: 3')
+    })
+
+    test('should handle nested arrow function', () => {
+      const { component, rendered } = render(<JsxParser
+        bindings={{ G: 'Global' }}
+        jsx={
+          '<div>' +
+          '{[' +
+          '["a1", "a2", "a3"],' +
+          '["b1", "b2"],' +
+          '].map((arr) => (' +
+          '<div>' +
+          '{arr.map((val) => (' +
+          '<span>' +
+          '{G}: {val} ' +
+          '</span>' +
+          '))}' +
+          '</div>' +
+          '))}' +
+          '</div>'
+        }
+      />)
+      expect(component.ParsedChildren[0].props.children).toHaveLength(2)
+      expect(component.ParsedChildren[0].props.children[0].props.children).toHaveLength(3)
+      expect(component.ParsedChildren[0].props.children[1].props.children).toHaveLength(2)
+      expect(rendered.childNodes[0].childNodes).toHaveLength(2)
+      expect(rendered.childNodes[0].childNodes[0].childNodes).toHaveLength(3)
+      expect(rendered.childNodes[0].childNodes[1].childNodes).toHaveLength(2)
+      expect(rendered.childNodes[0].childNodes[0].textContent.trim())
+        .toEqual('Global: a1 Global: a2 Global: a3')
+      expect(rendered.childNodes[0].childNodes[1].textContent.trim())
+        .toEqual('Global: b1 Global: b2')
+    })
+
+    test('should handle arrow function with condition render', () => {
+      const { component, rendered } = render(<JsxParser
+        bindings={{ G: 'Global' }}
+        jsx={'<div>{[1,2,3].map((val, idx) => idx > 0 && (<span>{G}: {val}</span>))}</div>'}
+      />)
+      expect(component.ParsedChildren[0].props.children).toHaveLength(3)
+      expect(rendered.childNodes[0].childNodes).toHaveLength(2)
+      expect(rendered.childNodes[0].childNodes[0].textContent.trim())
+        .toEqual('Global: 2')
+      expect(rendered.childNodes[0].childNodes[1].textContent.trim())
+        .toEqual('Global: 3')
     })
   })
 

@@ -3,6 +3,7 @@ import acornJsx from 'acorn-jsx'
 import React, { Component, Fragment } from 'react'
 import ATTRIBUTES from '../constants/attributeNames'
 import { canHaveChildren, canHaveWhitespace } from '../constants/specialTags'
+import { Frames, initFrames, popFrame, pushFrame, visitFrame } from '../helpers/frames'
 import { randomHash } from '../helpers/hash'
 import { parseStyle } from '../helpers/parseStyle'
 import { resolvePath } from '../helpers/resolvePath'
@@ -65,7 +66,11 @@ export default class JsxParser extends Component<Props> {
 
   ParsedChildren: ParsedTree = null
 
+  frames: Frames = null;
+
   parseJSX = (jsx: string): JSX.Element | JSX.Element[] => {
+    this.frames = initFrames()
+    pushFrame(this.frames, this.props.bindings || {})
     const wrappedJsx = `<root>${jsx}</root>`
     let parsed: Expression[] = []
     try {
@@ -119,7 +124,7 @@ export default class JsxParser extends Component<Props> {
           case '===': return this.parseExpression(expression.left) === this.parseExpression(expression.right)
           case '>': return this.parseExpression(expression.left) > this.parseExpression(expression.right)
           case '>=': return this.parseExpression(expression.left) >= this.parseExpression(expression.right)
-        /* eslint-enable eqeqeq,max-len */
+          /* eslint-enable eqeqeq,max-len */
         }
         return undefined
       case 'CallExpression':
@@ -128,7 +133,8 @@ export default class JsxParser extends Component<Props> {
           this.props.onError(new Error(`The expression '${expression.callee}' could not be resolved, resulting in an undefined return value.`))
           return undefined
         }
-        return parsedCallee(...expression.arguments.map(this.parseExpression))
+        const args = expression.arguments.map(this.parseExpression)
+        return parsedCallee(...args)
       case 'ConditionalExpression':
         return this.parseExpression(expression.test)
           ? this.parseExpression(expression.consequent)
@@ -136,7 +142,7 @@ export default class JsxParser extends Component<Props> {
       case 'ExpressionStatement':
         return this.parseExpression(expression.expression)
       case 'Identifier':
-        return (this.props.bindings || {})[expression.name]
+        return visitFrame(this.frames, expression.name)
       case 'Literal':
         return expression.value
       case 'LogicalExpression':
@@ -171,6 +177,26 @@ export default class JsxParser extends Component<Props> {
           case '!': return !expression.argument.value
         }
         return undefined
+      case 'ArrowFunctionExpression':
+        const params = expression.params?.map(param => this.parseFunctionParam(param))
+        return (...realArgs) => {
+          // setup frame
+          const bindings = {}
+          for (let i = 0; params && i < params.length; i += 1) {
+            bindings[params[i]] = realArgs[i]
+          }
+          pushFrame(this.frames, bindings)
+          const result = this.parseExpression(expression.body)
+          // clear frame
+          popFrame(this.frames)
+          return result
+        }
+    }
+  }
+
+  parseFunctionParam = (expression: Expression) => {
+    if (expression.type === 'Identifier') {
+      return expression.name
     }
   }
 

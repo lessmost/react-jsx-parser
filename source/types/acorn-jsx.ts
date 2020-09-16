@@ -134,11 +134,18 @@ export type UnaryExpression = BaseExpression & {
   argument: { value: any }
 }
 
+export type ArrowFunctionExpression = BaseExpression & {
+  type: 'ArrowFunctionExpression',
+  params: Expression[],
+  body: Expression
+}
+
 export type Expression =
   JSXAttribute | JSXAttributeExpression | JSXElement | JSXExpressionContainer |
   JSXSpreadAttribute | JSXText |
   ArrayExpression | BinaryExpression | CallExpression | ConditionalExpression |
   ExpressionStatement | Identifier | Literal | LogicalExpression | MemberExpression |
-  ObjectExpression | TemplateElement | TemplateLiteral | UnaryExpression
+  ObjectExpression | TemplateElement | TemplateLiteral | UnaryExpression |
+  ArrowFunctionExpression
 
 /* eslint-enable no-use-before-define */
