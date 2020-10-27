@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Frames } from '../helpers/frames';
 import type { Expression, JSXElement, JSXIdentifier, JSXMemberExpression, MemberExpression } from '../types/acorn-jsx';
 declare type BlacklistedAttr = string | RegExp;
 declare type Props = {
@@ -44,8 +45,10 @@ export default class JsxParser extends Component<Props> {
         renderUnrecognized: () => any;
     };
     ParsedChildren: ParsedTree;
+    frames: Frames;
     parseJSX: (jsx: string) => JSX.Element | JSX.Element[];
     parseExpression: (expression: Expression) => any;
+    parseFunctionParam: (expression: Expression) => string;
     parseMemberExpression: (expression: MemberExpression) => any;
     parseName: (element: JSXIdentifier | JSXMemberExpression) => string;
     parseElement: (element: JSXElement) => JSX.Element | JSX.Element[];

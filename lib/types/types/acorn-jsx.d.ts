@@ -119,5 +119,10 @@ export declare type UnaryExpression = BaseExpression & {
         value: any;
     };
 };
-export declare type Expression = JSXAttribute | JSXAttributeExpression | JSXElement | JSXExpressionContainer | JSXSpreadAttribute | JSXText | ArrayExpression | BinaryExpression | CallExpression | ConditionalExpression | ExpressionStatement | Identifier | Literal | LogicalExpression | MemberExpression | ObjectExpression | TemplateElement | TemplateLiteral | UnaryExpression;
+export declare type ArrowFunctionExpression = BaseExpression & {
+    type: 'ArrowFunctionExpression';
+    params: Expression[];
+    body: Expression;
+};
+export declare type Expression = JSXAttribute | JSXAttributeExpression | JSXElement | JSXExpressionContainer | JSXSpreadAttribute | JSXText | ArrayExpression | BinaryExpression | CallExpression | ConditionalExpression | ExpressionStatement | Identifier | Literal | LogicalExpression | MemberExpression | ObjectExpression | TemplateElement | TemplateLiteral | UnaryExpression | ArrowFunctionExpression;
 //# sourceMappingURL=acorn-jsx.d.ts.map
